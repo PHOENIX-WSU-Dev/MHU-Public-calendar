@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "Date": "2025-10-28",
+    "StartTime": "9:00 AM",
+    "EndTime": "11:30 AM",
+    "EventName": "Community Health Fair",
+    "Location": "Central Park Pavilion",
+    "IsPrivate": false
+  },
+  {
+    "Date": "2025-10-29",
+    "StartTime": "1:00 PM",
+    "EndTime": "3:00 PM",
+    "EventName": "Corporate Wellness Check",
+    "Location": "123 Business Rd.",
+    "IsPrivate": true
+  },
+  {
+    "Date": "2025-11-05",
+    "StartTime": "10:00 AM",
+    "EndTime": "12:00 PM",
+    "EventName": "Flu Shot Clinic",
+    "Location": "City Hall Courtyard",
+    "IsPrivate": false
+  },
+  {
+    "Date": "2025-11-05",
+    "StartTime": "2:00 PM",
+    "EndTime": "4:00 PM",
+    "EventName": "Senior Health Screening",
+    "Location": "Northwood Senior Center",
+    "IsPrivate": false
+  }
+]
