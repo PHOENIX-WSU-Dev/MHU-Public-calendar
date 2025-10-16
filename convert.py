@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, time
 from pathlib import Path
-import uuid
+
 from typing import Any
 
 import pandas as pd
@@ -83,6 +83,11 @@ def convert_excel_to_json(
         )
 
     df = pd.read_excel(input_path, sheet_name=0)
+    output_path: Path = Path("F:/MHU-public-calendar/MHU-Public-calendar/schedule.json"),
+) -> None:
+
+    df = pd.read_excel("EventSchedule.xlsx", sheet_name="Sheet1")
+    print(df.head())
     df = df.dropna(how="all")
     df = _sort_dataframe(df)
 
@@ -90,6 +95,7 @@ def convert_excel_to_json(
     namespace = uuid.uuid5(uuid.NAMESPACE_URL, "https://mhu-public-calendar.local/event")
 
     for index, row in df.iterrows():
+    for _, row in df.iterrows():
         record = {
             "Date": _format_date(row.get("Date")),
             "StartTime": _format_time(row.get("StartTime")),

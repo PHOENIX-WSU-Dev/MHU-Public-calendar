@@ -29,6 +29,19 @@ async function loadSchedule() {
     bindControls();
     updateToolbar();
     render();
+    const sortedEvents = events
+      .slice()
+      .sort((a, b) => {
+        const dateDiff = new Date(a.Date) - new Date(b.Date);
+        if (dateDiff !== 0) {
+          return dateDiff;
+        }
+        const timeA = parseTime(a.StartTime);
+        const timeB = parseTime(b.StartTime);
+        return timeA - timeB;
+      });
+
+    renderSchedule(sortedEvents);
   } catch (error) {
     renderErrorState(error.message);
   }
@@ -148,12 +161,46 @@ function renderListView() {
       acc.set(key, []);
     }
     acc.get(key).push(event);
+function parseTime(timeString) {
+  if (!timeString) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const date = new Date(`1970-01-01T${convertTo24Hour(timeString)}`);
+  return date.getTime();
+}
+
+function convertTo24Hour(timeString) {
+  const [timePart, modifier] = timeString.trim().split(/\s+/);
+  if (!timePart || !modifier) {
+    return `${timePart || '00:00'}:00`;
+  }
+
+  let [hours, minutes] = timePart.split(':').map(Number);
+  if (modifier.toLowerCase() === 'pm' && hours < 12) {
+    hours += 12;
+  }
+  if (modifier.toLowerCase() === 'am' && hours === 12) {
+    hours = 0;
+  }
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes || 0).padStart(2, '0')}:00`;
+}
+
+function renderSchedule(events) {
+  const grouped = events.reduce((acc, event) => {
+    const dateKey = event.Date || 'Undated';
+    if (!acc.has(dateKey)) {
+      acc.set(dateKey, []);
+    }
+    acc.get(dateKey).push(event);
     return acc;
   }, new Map());
 
   const fragment = document.createDocumentFragment();
 
   grouped.forEach((eventsForDate, key) => {
+  grouped.forEach((eventList, date) => {
     const section = document.createElement('article');
     section.className = 'date-section';
 
@@ -164,6 +211,11 @@ function renderListView() {
 
     eventsForDate.forEach((event) => {
       section.appendChild(renderListEvent(event));
+    heading.textContent = formatDateLabel(date);
+    section.appendChild(heading);
+
+    eventList.forEach((event) => {
+      section.appendChild(renderEvent(event));
     });
 
     fragment.appendChild(section);
@@ -174,12 +226,15 @@ function renderListView() {
 }
 
 function renderListEvent(event) {
+function renderEvent(event) {
   const item = document.createElement('div');
   item.className = 'event-item';
 
   const time = document.createElement('div');
   time.className = 'event-time';
   time.textContent = formatTimeRange(event);
+  const timeRange = [event.StartTime, event.EndTime].filter(Boolean).join(' - ');
+  time.textContent = timeRange || 'Time TBD';
   item.appendChild(time);
 
   const details = document.createElement('div');
@@ -199,6 +254,7 @@ function renderListEvent(event) {
     link.className = 'event-link';
     link.textContent = event.EventName || 'Untitled Event';
     name.appendChild(link);
+    name.textContent = event.EventName || 'Untitled Event';
     details.appendChild(name);
 
     const location = document.createElement('p');
@@ -386,6 +442,7 @@ function convertTo24Hour(timeString) {
 
 function renderEmptyState() {
   scheduleContainer.className = 'schedule-container list-view';
+function renderEmptyState() {
   scheduleContainer.innerHTML = `
     <div class="date-section">
       <h2 class="date-heading">No Upcoming Events</h2>
@@ -397,6 +454,9 @@ function renderEmptyState() {
 
 function renderErrorState(message) {
   scheduleContainer.className = 'schedule-container list-view';
+}
+
+function renderErrorState(message) {
   scheduleContainer.innerHTML = `
     <div class="date-section">
       <h2 class="date-heading">Schedule Unavailable</h2>
@@ -468,6 +528,24 @@ function updateToolbar() {
   } else {
     monthControls.setAttribute('hidden', '');
   }
+}
+
+function formatDateLabel(dateString) {
+  if (!dateString || dateString === 'Undated') {
+    return 'Undated Events';
+  }
+
+  const parsed = new Date(dateString);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateString;
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
 loadSchedule();
