@@ -73,15 +73,11 @@ def _sort_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def convert_excel_to_json(
-    input_path: Path = Path("EventSchedule.xlsx"),
-    output_path: Path = Path("schedule.json"),
+    output_path: Path = Path("F:/MHU-public-calendar/MHU-Public-calendar/schedule.json"),
 ) -> None:
-    if not input_path.exists():
-        raise FileNotFoundError(
-            f"Input Excel file not found: {input_path}. Please provide EventSchedule.xlsx."
-        )
 
-    df = pd.read_excel(input_path, sheet_name=0)
+    df = pd.read_excel("EventSchedule.xlsx", sheet_name="Sheet1")
+    print(df.head())
     df = df.dropna(how="all")
     df = _sort_dataframe(df)
 
