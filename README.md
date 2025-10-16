@@ -30,7 +30,7 @@ From this repository folder, run:
 python convert.py
 ```
 
-The script reads `EventSchedule.xlsx`, sorts the rows chronologically, and writes a refreshed `schedule.json`. Each event receives a stable `EventId` for deep-linking.
+The script reads `EventSchedule.xlsx`, trims stray whitespace, normalizes Excel time values, sorts the rows chronologically, and writes a refreshed `schedule.json`. Each event receives a stable `EventId` for deep-linking.
 
 ## 3. View the schedule
 

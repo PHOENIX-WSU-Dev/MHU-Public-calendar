@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, time
 from pathlib import Path
-
+import uuid
 from typing import Any
 
 import pandas as pd
@@ -21,7 +21,7 @@ def _format_date(value: Any) -> str:
     if isinstance(value, date):
         return value.isoformat()
     # Fall back to string representation.
-    return str(value)
+    return str(value).strip()
 
 
 def _format_time(value: Any) -> str:
@@ -35,16 +35,16 @@ def _format_time(value: Any) -> str:
     if isinstance(value, time):
         return _time_to_string(value)
     if isinstance(value, (int, float)):
-        # Excel stores times as fraction of a day.
-        seconds = float(value) * 24 * 3600
-        hours, remainder = divmod(seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
+        # Excel stores times as fraction of a day. Convert while guarding against
+        # floating point rounding issues by working in whole minutes.
+        minutes_total = round(float(value) * 24 * 60)
+        hours, minutes = divmod(minutes_total, 60)
         try:
-            t_value = time(int(hours) % 24, int(minutes) % 60, int(seconds) % 60)
+            t_value = time(int(hours) % 24, int(minutes) % 60)
             return _time_to_string(t_value)
         except ValueError:
-            return str(value)
-    return str(value)
+            return str(value).strip()
+    return str(value).strip()
 
 
 def _time_to_string(value: time) -> str:
@@ -83,11 +83,6 @@ def convert_excel_to_json(
         )
 
     df = pd.read_excel(input_path, sheet_name=0)
-    output_path: Path = Path("F:/MHU-public-calendar/MHU-Public-calendar/schedule.json"),
-) -> None:
-
-    df = pd.read_excel("EventSchedule.xlsx", sheet_name="Sheet1")
-    print(df.head())
     df = df.dropna(how="all")
     df = _sort_dataframe(df)
 
@@ -95,13 +90,12 @@ def convert_excel_to_json(
     namespace = uuid.uuid5(uuid.NAMESPACE_URL, "https://mhu-public-calendar.local/event")
 
     for index, row in df.iterrows():
-    for _, row in df.iterrows():
         record = {
             "Date": _format_date(row.get("Date")),
             "StartTime": _format_time(row.get("StartTime")),
             "EndTime": _format_time(row.get("EndTime")),
-            "EventName": row.get("EventName", "") if not pd.isna(row.get("EventName")) else "",
-            "Location": row.get("Location", "") if not pd.isna(row.get("Location")) else "",
+            "EventName": _clean_string(row.get("EventName")),
+            "Location": _clean_string(row.get("Location")),
             "IsPrivate": _to_bool(row.get("IsPrivate")),
         }
         record["EventId"] = _build_event_id(record, namespace, index)
@@ -128,6 +122,12 @@ def _build_event_id(record: dict[str, Any], namespace: uuid.UUID, index: int) ->
         base = f"row-{index}"
 
     return uuid.uuid5(namespace, base).hex
+
+
+def _clean_string(value: Any) -> str:
+    if pd.isna(value):
+        return ""
+    return str(value).strip()
 
 
 if __name__ == "__main__":

@@ -54,12 +54,6 @@ body {
   font-size: 1.05rem;
 }
 
-.schedule-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
 .date-section {
   background: var(--card-bg);
   border-radius: 18px;

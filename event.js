@@ -23,10 +23,21 @@ async function loadEvent(id) {
 
     const normalized = events
       .filter((event) => event && typeof event === 'object')
-      .map((event, index) => ({
-        ...event,
-        EventId: ensureEventId(event, index),
-      }));
+      .map((event, index) => {
+        const sanitized = {
+          ...event,
+          Date: cleanText(event.Date),
+          StartTime: cleanText(event.StartTime),
+          EndTime: cleanText(event.EndTime),
+          EventName: cleanText(event.EventName),
+          Location: cleanText(event.Location),
+          IsPrivate: toBoolean(event.IsPrivate),
+        };
+        return {
+          ...sanitized,
+          EventId: ensureEventId(sanitized, index),
+        };
+      });
 
     const match = normalized.find((event) => event.EventId === id);
     if (!match) {
@@ -168,6 +179,33 @@ function formatTimeRange(event) {
 
 function buildMapUrl(location) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
+function cleanText(value) {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (value == null) {
+    return '';
+  }
+  if (typeof value === 'number') {
+    return String(value);
+  }
+  return String(value).trim();
+}
+
+function toBoolean(value) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['true', '1', 'yes', 'y'].includes(normalized);
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  return Boolean(value);
 }
 
 function renderMissingId() {
