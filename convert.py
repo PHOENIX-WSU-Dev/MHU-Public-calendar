@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, time
 from pathlib import Path
+
 from typing import Any
 
 import pandas as pd
@@ -73,6 +74,15 @@ def _sort_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def convert_excel_to_json(
+    input_path: Path = Path("EventSchedule.xlsx"),
+    output_path: Path = Path("schedule.json"),
+) -> None:
+    if not input_path.exists():
+        raise FileNotFoundError(
+            f"Input Excel file not found: {input_path}. Please provide EventSchedule.xlsx."
+        )
+
+    df = pd.read_excel(input_path, sheet_name=0)
     output_path: Path = Path("F:/MHU-public-calendar/MHU-Public-calendar/schedule.json"),
 ) -> None:
 
@@ -82,6 +92,9 @@ def convert_excel_to_json(
     df = _sort_dataframe(df)
 
     records = []
+    namespace = uuid.uuid5(uuid.NAMESPACE_URL, "https://mhu-public-calendar.local/event")
+
+    for index, row in df.iterrows():
     for _, row in df.iterrows():
         record = {
             "Date": _format_date(row.get("Date")),
@@ -91,11 +104,30 @@ def convert_excel_to_json(
             "Location": row.get("Location", "") if not pd.isna(row.get("Location")) else "",
             "IsPrivate": _to_bool(row.get("IsPrivate")),
         }
+        record["EventId"] = _build_event_id(record, namespace, index)
         records.append(record)
 
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(records, f, indent=2)
         f.write("\n")
+
+def _build_event_id(record: dict[str, Any], namespace: uuid.UUID, index: int) -> str:
+    """Generate a stable event identifier for deep linking."""
+
+    parts = [
+        record.get("Date", ""),
+        record.get("StartTime", ""),
+        record.get("EndTime", ""),
+        record.get("EventName", ""),
+        record.get("Location", ""),
+        "private" if record.get("IsPrivate") else "public",
+    ]
+    base = "|".join(str(part).strip().lower() for part in parts if part is not None)
+
+    if not base.strip():
+        base = f"row-{index}"
+
+    return uuid.uuid5(namespace, base).hex
 
 
 if __name__ == "__main__":

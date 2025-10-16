@@ -14,6 +14,21 @@
           Browse upcoming public events and private engagements for the Mobile Health Unit.
         </p>
       </header>
+      <div id="toolbar" class="toolbar" hidden>
+        <div class="view-toggle" role="group" aria-label="View selection">
+          <button type="button" class="toggle-button is-active" data-view="list">List</button>
+          <button type="button" class="toggle-button" data-view="month">Month</button>
+        </div>
+        <div class="month-controls" id="month-controls" hidden aria-label="Month navigation">
+          <button type="button" class="month-nav" data-direction="prev" aria-label="Previous month">
+            ‹
+          </button>
+          <span class="month-label" id="month-label"></span>
+          <button type="button" class="month-nav" data-direction="next" aria-label="Next month">
+            ›
+          </button>
+        </div>
+      </div>
       <section id="schedule-container" class="schedule-container" aria-live="polite"></section>
     </main>
     <script src="script.js"></script>
